@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dons en Cryptomonnaies</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 1rem;
+      background: #fafafa;
+      color: #222;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .wallet, .donation-box {
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    code {
+      display: block;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      background: #eee;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      word-break: break-all;
+    }
+    .notice {
+      font-size: 0.85rem;
+      color: #555;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin: 0.5rem 0 0.2rem;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.6rem;
+      font-size: 1rem;
+      margin-bottom: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      cursor: pointer;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      font-weight: bold;
+    }
+    .small {
+      font-size: 0.75rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Faire un don en cryptomonnaies</h1>
+
+  <div class="wallet">
+    <strong>Bitcoin (BTC)</strong>
+    <code id="btc-address">3KTEUPbjkk3BW9cE7NSooaRL9K2wxV3WK4</code>
+  </div>
+
+  <div class="wallet">
+    <strong>Ethereum (ETH)</strong>
+    <code id="eth-address">0x6e2d1a092b8d81a313a2744bab2b0059854163d2</code>
+  </div>
+
+  <div class="wallet">
+    <strong>USDT (TRC20)</strong>
+    <code id="usdt-address">TMbYvAcLqwrsF3U35aUYCYiWcBVMyu3Hot</code>
+  </div>
+
+  <div class="donation-box">
+    <h2>Don automatique</h2>
+    <p>Choisis la crypto et le montant (en USD), puis clique sur “Faire un don”.</p>
+    <label for="amount">Montant (USD)</label>
+    <input type="number" id="amount" placeholder="Ex : 5" min="1" step="0.01" />
+
+    <label for="crypto">Crypto désirée</label>
+    <select id="crypto">
+      <option value="btc">BTC</option>
+      <option value="eth">ETH</option>
+      <option value="usdt">USDT</option>
+    </select>
+
+    <button id="donate-btn">Faire un don</button>
+    <p class="small">
+      Le paiement se fait via NOWPayments : tu choisis la crypto, le montant est converti en temps réel, et tu es redirigé pour finaliser. Si tu veux que les dons soient automatiquement convertis dans une devise cible, active l’option de conversion automatique dans ton dashboard NOWPayments. :contentReference[oaicite:4]{index=4}
+    </p>
+  </div>
+
+  <p class="notice">
+    ⚠️ Clé API incluse dans le JavaScript : pour un usage sérieux, il faut passer par un backend sécurisé. Les transactions sont gérées par NOWPayments et sont irréversibles. Ne partage jamais tes clés privées. :contentReference[oaicite:5]{index=5}
+  </p>
+
+  <script>
+    async function createInvoice() {
+      const amount = document.getElementById('amount').value.trim();
+      const crypto = document.getElementById('crypto').value;
+      if (!amount || isNaN(amount) || Number(amount) <= 0) {
+        alert('Entre un montant valide en USD');
+        return;
+      }
+
+      // Mapping pour NOWPayments pay_currency
+      let pay_currency = crypto.toUpperCase(); // ex: BTC, ETH, USDT
+      // Si tu veux forcer TRC20 pour USDT, tu peux remplacer par 'USDT-TRON' selon config (vérifie dans ton dashboard)
+      if (pay_currency === 'USDT') {
+        // Par défaut NOWPayments supporte USDT sur plusieurs réseaux automatiquement
+      }
+
+      const payload = {
+        price_amount: Number(amount),
+        price_currency: 'usd',
+        pay_currency: pay_currency,
+        order_id: 'don_' + Date.now(),
+        order_description: 'Don crypto personnel'
+      };
+
+      try {
+        const resp = await fetch('https://api.nowpayments.io/v1/invoice', {
+          method: 'POST',
+          headers: {
+            'x-api-key': 'qUiIlXDFoLCs7RFzgKrP68Ds9HjJCDpO',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (data.invoice_url) {
+          window.open(data.invoice_url, '_blank');
+        } else {
+          console.error('Réponse NOWPayments erreur', data);
+          alert('Erreur lors de la création du don. Vérifie ta console.');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Erreur réseau ou avec NOWPayments.');
+      }
+    }
+
+    document.getElementById('donate-btn').addEventListener('click', createInvoice);
+  </script>
+</body>
+</html>
