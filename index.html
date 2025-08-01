@@ -30,7 +30,7 @@
       margin-top: 0.6rem;
       margin-bottom: 0.2rem;
     }
-    input, select, button {
+    input, select {
       width: 100%;
       padding: 0.65rem;
       font-size: 1rem;
@@ -39,55 +39,27 @@
       border-radius: 6px;
       box-sizing: border-box;
     }
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .small {
-      font-size: 0.75rem;
-      color: #555;
-    }
-    .wallet {
-      margin-bottom: 1rem;
-    }
-    code {
-      display: block;
-      background:#f0f0f0;
-      padding:6px 8px;
-      border-radius:4px;
-      word-break: break-all;
-      margin-top:4px;
+    .nowpayments-widget-wrapper {
+      text-align: center;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
   <h1>Faire un don en cryptomonnaies</h1>
 
-  <div class="box wallet">
-    <div><strong>Bitcoin (BTC)</strong><code>3KTEUPbjkk3BW9cE7NSooaRL9K2wxV3WK4</code></div>
-    <div><strong>Ethereum (ETH)</strong><code>0x6e2d1a092b8d81a313a2744bab2b0059854163d2</code></div>
-    <div><strong>USDT (TRC20)</strong><code>TMbYvAcLqwrsF3U35aUYCYiWcBVMyu3Hot</code></div>
-  </div>
-
   <div class="box">
-    <h2>Don via NowPayments</h2>
-    <p>Choisis la crypto et le montant en USD, puis clique sur faire un don.</p>
-
     <label for="amount">Montant (USD)</label>
     <input type="number" id="amount" placeholder="Ex : 5" min="1" step="0.01" />
 
     <label for="crypto">Crypto</label>
     <select id="crypto">
-      <option value="btc">BTC</option>
-      <option value="eth">ETH</option>
-      <option value="usdt">USDT</option>
+      <option value="btc">Bitcoin (BTC)</option>
+      <option value="eth">Ethereum (ETH)</option>
+      <option value="usdt">USDT (TRC20)</option>
     </select>
 
-    <!-- Widget container ; les attributs seront mis à jour en JS -->
-    <div class="nowpayments-widget-wrapper" style="text-align:center;">
+    <div class="nowpayments-widget-wrapper">
       <div id="nowpayments_widget"
            data-type="donation"
            data-api-key="qUiIlXDFoLCs7RFzgKrP68Ds9HjJCDpO"
@@ -95,79 +67,57 @@
            data-amount=""
            data-currency="usd"
            data-pay-currency=""
-           data-button-label="Faire un don"
-           style="display:inline-block;">
+           data-button-label="Faire un don">
       </div>
     </div>
-
-    <p class="small">
-      Le widget va ouvrir une fenêtre NowPayments pour payer avec la crypto et le montant choisis. Les dons sont irréversibles. Pour usage personnel uniquement. 
-    </p>
   </div>
-
-  <p class="small" style="text-align:center;">
-    ⚠️ Ne partage jamais tes clés privées. Ce widget utilise ta clé publique NowPayments dans le front ; pour une version plus sécurisée, il faudrait passer par un backend. 
-  </p>
 
   <script src="https://widget.nowpayments.io/v1/widget.js"></script>
   <script>
     const amountInput = document.getElementById('amount');
     const cryptoSelect = document.getElementById('crypto');
-    const widgetDiv = document.getElementById('nowpayments_widget');
+    const widgetWrapper = document.querySelector('.nowpayments-widget-wrapper');
 
     function refreshWidget() {
       const amount = parseFloat(amountInput.value);
       const crypto = cryptoSelect.value.toUpperCase();
 
+      // Supprime l'ancien widget pour forcer la recréation
+      widgetWrapper.innerHTML = '';
+
       if (!amount || amount <= 0) {
-        // on laisse le widget avec valeurs par défaut si montant invalide
-        widgetDiv.removeAttribute('data-amount');
-      } else {
-        widgetDiv.setAttribute('data-amount', amount.toFixed(2));
+        // Ne rien afficher si montant invalide
+        return;
       }
-      // Définit la crypto demandée
+
+      // Crée un nouveau div widget avec les bonnes données
+      const widgetDiv = document.createElement('div');
+      widgetDiv.id = 'nowpayments_widget';
+      widgetDiv.setAttribute('data-type', 'donation');
+      widgetDiv.setAttribute('data-api-key', 'qUiIlXDFoLCs7RFzgKrP68Ds9HjJCDpO');
+      widgetDiv.setAttribute('data-description', 'Dons personnels en crypto');
+      widgetDiv.setAttribute('data-amount', amount.toFixed(2));
+      widgetDiv.setAttribute('data-currency', 'usd');
       widgetDiv.setAttribute('data-pay-currency', crypto);
-      // Reconstruit le widget en ré-injectant (certains navigateurs lisent au clic)
-      // Si le widget ne prend pas à jour automatiquement, on peut recréer l'élément :
-      const parent = widgetDiv.parentNode;
-      const clone = widgetDiv.cloneNode(true);
-      parent.replaceChild(clone, widgetDiv);
+      widgetDiv.setAttribute('data-button-label', 'Faire un don');
+
+      widgetWrapper.appendChild(widgetDiv);
+
+      // Recharge le script pour générer le bouton
+      const oldScript = document.querySelector('script[src="https://widget.nowpayments.io/v1/widget.js"]');
+      if (oldScript) oldScript.remove();
+
+      const script = document.createElement('script');
+      script.src = 'https://widget.nowpayments.io/v1/widget.js';
+      document.body.appendChild(script);
     }
 
-    // Met à jour avant que l'utilisateur clique
     amountInput.addEventListener('input', refreshWidget);
     cryptoSelect.addEventListener('change', refreshWidget);
 
-    // Initialisation
+    // Initialisation au chargement
     refreshWidget();
   </script>
 </body>
 </html>
-const amountInput = document.getElementById('amount');
-const cryptoSelect = document.getElementById('crypto');
-const widgetDiv = document.getElementById('nowpayments_widget');
 
-function refreshWidget() {
-  const amount = parseFloat(amountInput.value);
-  const crypto = cryptoSelect.value.toUpperCase();
-
-  if (!amount || amount <= 0) {
-    widgetDiv.removeAttribute('data-amount');
-  } else {
-    widgetDiv.setAttribute('data-amount', amount.toFixed(2));
-  }
-  widgetDiv.setAttribute('data-pay-currency', crypto);
-
-  // Recrée le widget (hack pour forcer actualisation)
-  const parent = widgetDiv.parentNode;
-  const clone = widgetDiv.cloneNode(true);
-  parent.replaceChild(clone, widgetDiv);
-}
-
-// Ecoute les changements
-amountInput.addEventListener('input', refreshWidget);
-cryptoSelect.addEventListener('change', refreshWidget);
-
-// Initialisation au chargement
-refreshWidget();
-Mise à jour : widget NowPayments avec sélection montant/crypto
