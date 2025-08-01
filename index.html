@@ -143,4 +143,31 @@
   </script>
 </body>
 </html>
+const amountInput = document.getElementById('amount');
+const cryptoSelect = document.getElementById('crypto');
+const widgetDiv = document.getElementById('nowpayments_widget');
+
+function refreshWidget() {
+  const amount = parseFloat(amountInput.value);
+  const crypto = cryptoSelect.value.toUpperCase();
+
+  if (!amount || amount <= 0) {
+    widgetDiv.removeAttribute('data-amount');
+  } else {
+    widgetDiv.setAttribute('data-amount', amount.toFixed(2));
+  }
+  widgetDiv.setAttribute('data-pay-currency', crypto);
+
+  // Recrée le widget (hack pour forcer actualisation)
+  const parent = widgetDiv.parentNode;
+  const clone = widgetDiv.cloneNode(true);
+  parent.replaceChild(clone, widgetDiv);
+}
+
+// Ecoute les changements
+amountInput.addEventListener('input', refreshWidget);
+cryptoSelect.addEventListener('change', refreshWidget);
+
+// Initialisation au chargement
+refreshWidget();
 Mise à jour : widget NowPayments avec sélection montant/crypto
